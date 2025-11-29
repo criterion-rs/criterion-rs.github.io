@@ -1,0 +1,55 @@
+name: Deploy book content
+
+# It is triggered from criterion.rs repo via repository_dispatch
+on:
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  packages: read  # allow pulling from GHCR
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  REF_TAG: latest  # always deploy latest book build
+  REF: ghcr.io/criterion-rs/criterion.rs-book:${{ env.REF_TAG }}
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: "gh-pages"
+      - name: Setup ORAS
+        uses: oras-project/setup-oras@v1
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Pull artifact and extract
+        run: |
+          set -euo pipefail
+          mkdir -p artifact book
+          oras pull "${REF}" -o artifact
+          tar -xzf artifact/book.tar.gz -C book
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
