@@ -1,8 +1,10 @@
 name: Deploy book content
 
-# It is triggered from criterion.rs repo via repository_dispatch
+# It is triggered from criterion.rs repo via repository_dispatch or manually.
 on:
   workflow_dispatch:
+  repository_dispatch:
+    types: [publish-book]
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
