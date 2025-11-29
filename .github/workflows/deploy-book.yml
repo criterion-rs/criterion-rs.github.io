@@ -18,8 +18,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  REF_TAG: latest  # always deploy latest book build
-  REF: ghcr.io/criterion-rs/criterion.rs-book:${{ env.REF_TAG }}
+  REF: ghcr.io/criterion-rs/criterion.rs-book:latest  # always deploy latest book build
 
 jobs:
   deploy:
